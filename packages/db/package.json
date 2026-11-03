@@ -1,5 +1,5 @@
 {
-  "name": "@saasfly/db",
+  "name": "@mediasync/db",
   "version": "0.1.0",
   "private": true,
   "exports": {
@@ -10,26 +10,27 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "lint": "eslint .",
-    "format": "prisma format && prettier --check '**/*.{ts,json}' ",
+    "format": "prisma format",
     "db:generate": "prisma generate",
-    "db:push": "bun with-env prisma db push --skip-generate",
+    "db:push": "bun with-env prisma db push",
+    "db:seed": "bun with-env bun seed.ts",
+    "db:reset": "bun with-env prisma db push --force-reset && bun with-env bun seed.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env.local --"
   },
   "dependencies": {
-    "kysely": "0.27.3",
-    "@vercel/postgres-kysely": "0.8.0"
+    "@prisma/client": "6.1.0",
+    "@mediasync/shared": "workspace:*"
   },
   "devDependencies": {
     "@saasfly/eslint-config": "workspace:*",
     "@saasfly/prettier-config": "workspace:*",
     "@saasfly/typescript-config": "workspace:*",
+    "@types/node": "20.12.12",
     "dotenv-cli": "7.3.0",
     "eslint": "8.57.0",
     "prettier": "3.2.5",
-    "prisma": "5.9.1",
-    "prisma-kysely": "1.7.1",
-    "@types/pg": "8.11.0",
+    "prisma": "6.1.0",
     "typescript": "5.4.5"
   },
   "eslintConfig": {

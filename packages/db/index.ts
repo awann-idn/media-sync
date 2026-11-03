@@ -1,10 +1,17 @@
-import { createKysely } from "@vercel/postgres-kysely";
+import { PrismaClient } from "@prisma/client";
 
-import type { DB } from "./prisma/types";
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
 
-export { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+  });
 
-export * from "./prisma/types";
-export * from "./prisma/enums";
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
 
-export const db = createKysely<DB>();
+export * from "@prisma/client";

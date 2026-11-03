@@ -1,8 +1,4 @@
 import type { Config } from "tailwindcss";
-// import colors from "tailwindcss/colors";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import flattenColorPalette from "tailwindcss/lib/util/flattenColorPalette";
 
 export default {
   darkMode: ["class"],
@@ -10,125 +6,91 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      padding: "1.5rem",
+      screens: { "2xl": "1280px" },
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+        forest: {
+          DEFAULT: "#2B4C3B",
+          700: "#1E3A2C",
+          50: "#EEF4EF",
         },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+        sage: {
+          DEFAULT: "#C2D5C4",
+          300: "#D6E4D7",
+          600: "#8FAE93",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+        cream: {
+          DEFAULT: "#FDF0D5",
+          card: "#FFFBF1",
+          line: "#D9D2BC",
         },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+        paper: "#FFFBF1",
+        ink: {
+          DEFAULT: "#1E2B24",
+          muted: "#55655B",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+        status: {
+          done: { solid: "#4FB286", soft: "#DDF1E6", text: "#1F6B4A" },
+          doing: { solid: "#E8B84A", soft: "#FBEFC8", text: "#7A5A00" },
+          blocked: { solid: "#D9626B", soft: "#F8DADD", text: "#9B2C36" },
+          idle: { solid: "#9AA89F", soft: "#E6EBE6", text: "#3E4A43" },
+          review: { solid: "#6E9AA8", soft: "#DCEAEF", text: "#2C5563" },
         },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        background: "#FDF0D5",
+        foreground: "#1E2B24",
+        border: "#D9D2BC",
+        input: "#D9D2BC",
+        ring: "#2B4C3B",
+        muted: "#E6EBE6",
+        "muted-foreground": "#55655B",
+        card: "#FFFBF1",
+        "card-foreground": "#1E2B24",
+        primary: { DEFAULT: "#2B4C3B", foreground: "#FFFBF1" },
+        secondary: { DEFAULT: "#C2D5C4", foreground: "#1E2B24" },
+        destructive: { DEFAULT: "#D9626B", foreground: "#FFFBF1" },
+        accent: { DEFAULT: "#EEF4EF", foreground: "#1E2B24" },
+        popover: { DEFAULT: "#FFFBF1", foreground: "#1E2B24" },
+      },
+      fontFamily: {
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        heading: [
+          "Plus Jakarta Sans",
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        card: "12px",
+        lg: "8px",
+        md: "8px",
+        sm: "4px",
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(30, 43, 36, 0.06)",
+        pop: "0 12px 32px -12px rgba(30, 43, 36, 0.25)",
       },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        spin: {
-          "0%": {
-            rotate: "0deg",
-          },
-          "15%, 35%": {
-            rotate: "90deg",
-          },
-          "65%, 85%": {
-            rotate: "270deg",
-          },
-          "100%": {
-            rotate: "360deg",
-          },
-        },
-        marquee: {
-          from: { transform: "translateX(0)" },
-          to: { transform: "translateX(calc(-50% - var(--gap)/2))" },
-        },
-        "marquee-vertical": {
-          from: { transform: "translateY(0)" },
-          to: { transform: "translateY(calc(-100% - var(--gap)))" },
-        },
-        slide: {
-          to: {
-            transform: "translate(calc(100cqw - 100%), 0)",
-          },
-        },
-        meteor: {
-          "0%": { transform: "rotate(215deg) translateX(0)", opacity: "1" },
-          "70%": { opacity: "1" },
-          "100%": {
-            transform: "rotate(215deg) translateX(-500px)",
-            opacity: "0",
-          },
-        },
-        scroll: {
-          to: {
-            transform: "translate(calc(-50% - 0.5rem))",
-          },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(4px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        spinLinear: "spin calc(var(--speed) * 2) infinite linear",
-        slide: "slide var(--speed) ease-in-out infinite alternate",
-        marquee: "marquee var(--duration) linear infinite",
-        "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
-        "meteor-effect": "meteor 5s linear infinite",
-        scroll:
-          "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
+        "fade-in": "fade-in 0.18s ease-out",
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), addVariablesForColors],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
-function addVariablesForColors({ addBase, theme }: any) {
-  const allColors = flattenColorPalette(theme("colors"));
-  let newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
-  );
-
-  addBase({
-    ":root": newVars,
-  });
-}

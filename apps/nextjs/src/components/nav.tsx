@@ -2,57 +2,85 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  AlertTriangle,
+  CalendarDays,
+  ClipboardCheck,
+  LayoutDashboard,
+  ListChecks,
+  Scale,
+  Settings,
+} from "lucide-react";
 
-import { cn } from "@saasfly/ui";
-import * as Icons from "@saasfly/ui/icons";
+import { cn } from "~/lib/utils";
 
-import type { SidebarNavItem } from "~/types";
+const items = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/tasks", label: "Tugas", icon: ListChecks },
+  { href: "/decisions", label: "Keputusan", icon: Scale },
+  { href: "/evaluations", label: "Evaluasi", icon: ClipboardCheck },
+  { href: "/meetings", label: "Rapat", icon: CalendarDays },
+  { href: "/conflicts", label: "Konflik", icon: AlertTriangle },
+  { href: "/settings", label: "Pengaturan", icon: Settings },
+];
 
-interface DashboardNavProps {
-  items: SidebarNavItem[];
-  params: {
-    lang: string;
-  };
-}
+const mobileItems = items.slice(0, 5);
 
-const iconMapObj = new Map([
-  ["clusters", Icons.Cluster],
-  ["billing", Icons.Billing],
-  ["settings", Icons.Settings],
-]);
-
-export function DashboardNav({ items, params: { lang } }: DashboardNavProps) {
-  const path = usePathname();
-
-  if (!items?.length) {
-    return null;
-  }
-
+export function DesktopNav() {
+  const pathname = usePathname();
   return (
-    <nav className="grid items-start gap-2">
-      {items.map((item, index) => {
-        // const Icon = item.icon;
-        const Icon = iconMapObj.get(item.id) ?? Icons.ArrowRight;
+    <nav className="mt-6 flex flex-col gap-1" aria-label="Navigasi utama">
+      {items.map((item) => {
+        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const Icon = item.icon;
         return (
-          item.href && (
-            <Link
-              key={index}
-              href={item.disabled ? "/" : `/${lang}` + item.href}
-            >
-              <span
-                className={cn(
-                  "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                  path === item.href ? "bg-accent" : "transparent",
-                  item.disabled && "cursor-not-allowed opacity-80",
-                )}
-              >
-                <Icon className="mr-2 h-4 w-4" />
-                <span>{item.title}</span>
-              </span>
-            </Link>
-          )
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
+              active
+                ? "bg-cream-card text-forest"
+                : "text-cream-card/80 hover:bg-white/10 hover:text-cream-card",
+            )}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+            {item.label}
+          </Link>
         );
       })}
+    </nav>
+  );
+}
+
+export function MobileNav() {
+  const pathname = usePathname();
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-cream-line bg-paper pb-[env(safe-area-inset-bottom)] print:hidden md:hidden"
+      aria-label="Navigasi seluler"
+    >
+      <div className="grid grid-cols-5">
+        {mobileItems.map((item) => {
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-medium",
+                active ? "text-forest" : "text-ink-muted",
+              )}
+            >
+              <Icon className="h-5 w-5" aria-hidden />
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

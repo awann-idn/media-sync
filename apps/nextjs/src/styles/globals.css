@@ -4,82 +4,121 @@
 
 @layer base {
   :root {
-    --background: 0deg 0% 100%;
-    --foreground: 222.2deg 47.4% 11.2%;
-
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-
-    --card: 0deg 0% 100%;
-    --card-foreground: 222.2deg 47.4% 11.2%;
-
-    --primary: 222.2deg 47.4% 11.2%;
-    --primary-foreground: 210deg 40% 98%;
-
-    --secondary: 210deg 40% 96.1%;
-    --secondary-foreground: 222.2deg 47.4% 11.2%;
-
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-
-    --destructive: 0deg 100% 50%;
-    --destructive-foreground: 210deg 40% 98%;
-
-    --ring: 215deg 20.2% 65.1%;
-
-    --radius: 0.5rem;
+    --background: #fdf0d5;
+    --foreground: #1e2b24;
+    --radius: 8px;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    /* --background: 224 71% 4%; */
-    --foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 0 0% 63.9%;
-
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 1.2%;
-
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --ring: 216 34% 17%;
-
-    --radius: 0.5rem;
+  * {
+    @apply border-cream-line;
   }
-}
 
-@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-cream text-ink antialiased;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
   }
 
-  .container {
-    @apply max-sm:px-4;
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading text-ink;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-forest ring-offset-2 ring-offset-cream;
+  }
+
+  ::selection {
+    @apply bg-sage text-ink;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .card-surface {
+    @apply rounded-card border border-cream-line bg-paper shadow-card;
+  }
+
+  .input-base {
+    @apply min-h-11 w-full rounded-lg border border-cream-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-forest focus:outline-none focus:ring-2 focus:ring-forest/30;
+  }
+
+  .label-base {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-muted;
+  }
+
+  .btn-base {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-forest text-cream-card hover:bg-forest-700;
+  }
+
+  .btn-secondary {
+    @apply btn-base border border-sage-600 bg-sage-300 text-ink hover:bg-sage;
+  }
+
+  .btn-ghost {
+    @apply btn-base text-ink hover:bg-forest-50;
+  }
+
+  .btn-danger {
+    @apply btn-base bg-status-blocked-solid text-white hover:brightness-95;
+  }
+
+  .table-base {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .table-base th {
+    @apply border-b border-cream-line bg-sage/40 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted;
+  }
+
+  .table-base td {
+    @apply border-b border-cream-line/70 px-3 py-3 align-top;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+
+@media print {
+  [data-app-sidebar],
+  [data-app-topbar] {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  .md\:pl-60 {
+    padding-left: 0 !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
   }
 }

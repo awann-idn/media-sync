@@ -1,103 +1,448 @@
 generator client {
-  provider     = "prisma-kysely"
-  output       = "."
-  fileName     = "types.ts"
-  enumFileName = "enums.ts"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("POSTGRES_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-enum SubscriptionPlan {
-  FREE
-  PRO
-  BUSINESS
+enum AccessLevel {
+  MEMBER
+  OBSERVER
 }
 
-model Customer {
-  id                     Int               @id @default(autoincrement())
-  authUserId             String
-  name                   String?
-  plan                   SubscriptionPlan?
-  stripeCustomerId       String?           @unique
-  stripeSubscriptionId   String?           @unique
-  stripePriceId          String?
-  stripeCurrentPeriodEnd DateTime?
-  createdAt              DateTime          @default(now())
-  updatedAt              DateTime          @default(now())
-
-  @@index([authUserId])
+enum TaskPhase {
+  PRE_PRODUCTION
+  PRODUCTION
+  POST_PRODUCTION
 }
 
-model Account {
-  id                String  @id @default(dbgenerated("gen_random_uuid()"))
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  UNDER_REVIEW
+  COMPLETED
+  BLOCKED
 }
 
-model Session {
-  id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum DecisionStatus {
+  PROPOSED
+  SHORTLISTED
+  ACCEPTED
+  REJECTED
+  FROZEN
+}
+
+enum DecisionMethod {
+  CONSENSUS
+  MAJORITY
+  PM_TIEBREAK
+}
+
+enum EvaluationPeriod {
+  PRE
+  PROD
+  POST
+  FINAL
+}
+
+enum EvaluationCategory {
+  EXCELLENT
+  MODERATE
+  INTERVENTION_NEEDED
+}
+
+enum InterventionStep {
+  NUDGE
+  CHECK_IN
+  REBALANCE
+  FORMAL_WARNING
+  BACKUP_AND_ESCALATE
+}
+
+enum InterventionCause {
+  NO_ROLE_CLARITY
+  SKILL_MISMATCH
+  OVERLOAD
+  PERSONAL_BARRIER
+  LOW_EFFORT
+  UNKNOWN
+}
+
+enum ConflictType {
+  VISUAL_CONCEPT
+  LATE_ASSET
+  REVISION_DISPUTE
+  RECURRING
+  WORKLOAD
+}
+
+enum ConflictStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  ESCALATED
+}
+
+model Project {
+  id               String   @id @default(uuid())
+  name             String
+  productGoal      String
+  audienceProfile  String
+  goalConfirmed    Boolean  @default(false)
+  audienceConfirmed Boolean @default(false)
+  officialEnd      DateTime
+  createdAt        DateTime @default(now())
+
+  users          User[]
+  tasks          Task[]
+  designRounds   DesignRound[]
+  styleGuides    StyleGuideVersion[]
+  evaluations    Evaluation[]
+  interventions  Intervention[]
+  meetings       MeetingLog[]
+  conflicts      Conflict[]
+}
+
+model Role {
+  id        String  @id @default(uuid())
+  code      String  @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  usersPrimary   User[]              @relation("UserPrimaryRole")
+  usersSecondary User[]              @relation("UserSecondaryRole")
+  criteria       DecisionCriterion[] @relation("CriterionOwner")
 }
 
 model User {
-  id            String    @id @default(dbgenerated("gen_random_uuid()"))
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
+  id              String      @id @default(uuid())
+  projectId       String
+  project         Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  roleId          String
+  role            Role        @relation("UserPrimaryRole", fields: [roleId], references: [id])
+  secondaryRoleId String?
+  secondaryRole   Role?       @relation("UserSecondaryRole", fields: [secondaryRoleId], references: [id])
+  name            String
+  email           String      @unique
+  accessLevel     AccessLevel @default(MEMBER)
+  pmApprovedByAll Boolean     @default(false)
+  avatarColor     String      @default("#2B4C3B")
+  createdAt       DateTime    @default(now())
+
+  tasksAssigned       Task[]             @relation("TaskAssignee")
+  tasksBackup         Task[]             @relation("TaskBackup")
+  statusChanges       TaskStatusHistory[] @relation("StatusChangedBy")
+  deliverables        Deliverable[]
+  decisions           DesignDecision[]   @relation("DecisionProposer")
+  decisionScores      DecisionScore[]
+  evaluations         Evaluation[]       @relation("EvaluationSubject")
+  evaluationEntries   EvaluationEntry[]  @relation("EvaluationEvaluator")
+  interventions       Intervention[]     @relation("InterventionSubject")
+  interventionsRecorded Intervention[]   @relation("InterventionRecorder")
+  meetingsCreated     MeetingLog[]       @relation("MeetingCreator")
+  attendance          Attendance[]
+  actionItems         ActionItem[]       @relation("ActionItemOwner")
+  conflictsOpened     Conflict[]         @relation("ConflictOpener")
+  conflictSteps       ConflictStep[]     @relation("ConflictStepDecider")
+  changeRequests      ChangeRequest[]    @relation("ChangeRequester")
+  changeRequestsApproved ChangeRequest[] @relation("ChangeApprover")
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+model Task {
+  id              String     @id @default(uuid())
+  projectId       String
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase           TaskPhase
+  stepNo          Int
+  title           String
+  description     String?
+  assignedUserId  String
+  assignedUser    User       @relation("TaskAssignee", fields: [assignedUserId], references: [id])
+  backupUserId    String?
+  backupUser      User?      @relation("TaskBackup", fields: [backupUserId], references: [id])
+  internalDeadline DateTime
+  officialDeadline DateTime
+  status          TaskStatus @default(NOT_STARTED)
+  deliverableUrl  String?
+  deliverableType String?
+  completedAt     DateTime?
+  blockedReason   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  @@unique([identifier, token])
+  dependencies  TaskDependency[]   @relation("TaskDependencies")
+  dependents    TaskDependency[]   @relation("TaskDependents")
+  statusHistory TaskStatusHistory[]
+  deliverables  Deliverable[]
+  actionItems   ActionItem[]
+
+  @@unique([projectId, stepNo])
 }
 
-model K8sClusterConfig {
-  id         Int               @id @default(autoincrement())
-  name       String
-  location   String
-  authUserId String
-  plan       SubscriptionPlan? @default(FREE)
-  network    String?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @default(now())
-  status     Status?           @default(PENDING)
-  delete     Boolean?          @default(false)
+model TaskDependency {
+  id              String @id @default(uuid())
+  taskId          String
+  task            Task   @relation("TaskDependencies", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTaskId String
+  dependsOnTask   Task   @relation("TaskDependents", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
 
-  // @@unique([plan, authUserId])
-  @@index([authUserId])
+  @@unique([taskId, dependsOnTaskId])
 }
 
-enum Status {
-  PENDING
-  CREATING
-  INITING
-  RUNNING
-  STOPPED
-  DELETED
+model TaskStatusHistory {
+  id          String      @id @default(uuid())
+  taskId      String
+  task        Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fromStatus  TaskStatus?
+  toStatus    TaskStatus
+  changedById String
+  changedBy   User        @relation("StatusChangedBy", fields: [changedById], references: [id])
+  note        String?
+  changedAt   DateTime    @default(now())
+
+  @@index([taskId, changedAt])
+}
+
+model Deliverable {
+  id           String   @id @default(uuid())
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  version      Int
+  url          String
+  type         String?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([taskId, version])
+}
+
+model DesignRound {
+  id           String   @id @default(uuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  topic        String
+  currentStep  Int      @default(1)
+  deadlockCount Int     @default(0)
+  createdAt    DateTime @default(now())
+
+  decisions DesignDecision[]
+}
+
+model DecisionCriterion {
+  id           String  @id @default(uuid())
+  code         String  @unique
+  name         String
+  description  String?
+  weight       Int
+  minThreshold Float?
+  ownerRoleId  String?
+  ownerRole    Role?   @relation("CriterionOwner", fields: [ownerRoleId], references: [id])
+
+  scores DecisionScore[]
+}
+
+model DesignDecision {
+  id           String         @id @default(uuid())
+  roundId      String
+  round        DesignRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  proposerId   String
+  proposer     User           @relation("DecisionProposer", fields: [proposerId], references: [id])
+  title        String
+  proposedIdea String
+  referenceUrl String?
+  score        Float          @default(0)
+  status       DecisionStatus @default(PROPOSED)
+  decidedBy    DecisionMethod?
+  rationale    String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  scores      DecisionScore[]
+  styleGuides StyleGuideVersion[]
+}
+
+model DecisionScore {
+  id          String           @id @default(uuid())
+  decisionId  String
+  decision    DesignDecision   @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  criterionId String
+  criterion   DecisionCriterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  scorerId    String
+  scorer      User             @relation(fields: [scorerId], references: [id])
+  score       Int
+  createdAt   DateTime         @default(now())
+
+  @@unique([decisionId, criterionId, scorerId])
+}
+
+model StyleGuideVersion {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  version     Int
+  palette     Json
+  typography  Json
+  layoutRules Json
+  audioRules  Json
+  isFrozen    Boolean  @default(false)
+  frozenAt    DateTime?
+  decisionId  String?  @unique
+  decision    DesignDecision? @relation(fields: [decisionId], references: [id])
+  createdAt   DateTime @default(now())
+
+  changeRequests ChangeRequest[]
+
+  @@unique([projectId, version])
+}
+
+model ChangeRequest {
+  id            String   @id @default(uuid())
+  styleGuideId  String
+  styleGuide    StyleGuideVersion @relation(fields: [styleGuideId], references: [id], onDelete: Cascade)
+  meetingId     String
+  meeting       MeetingLog @relation(fields: [meetingId], references: [id])
+  requestedById String
+  requestedBy   User     @relation("ChangeRequester", fields: [requestedById], references: [id])
+  description   String
+  status        String   @default("PENDING")
+  approvedById  String?
+  approvedBy    User?    @relation("ChangeApprover", fields: [approvedById], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Evaluation {
+  id              String             @id @default(uuid())
+  projectId       String
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User               @relation("EvaluationSubject", fields: [userId], references: [id])
+  period          EvaluationPeriod
+  activeScore     Int
+  disciplineScore Int
+  totalScore      Int
+  category        EvaluationCategory
+  createdAt       DateTime           @default(now())
+
+  entries EvaluationEntry[]
+
+  @@unique([projectId, userId, period])
+}
+
+model EvaluationEntry {
+  id           String     @id @default(uuid())
+  evaluationId String
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  evaluatorId  String
+  evaluator    User       @relation("EvaluationEvaluator", fields: [evaluatorId], references: [id])
+  isSelf       Boolean    @default(false)
+  indicator    String
+  score        Int
+  note         String?
+  createdAt    DateTime   @default(now())
+
+  @@unique([evaluationId, evaluatorId, indicator])
+}
+
+model Intervention {
+  id           String            @id @default(uuid())
+  projectId    String
+  project      Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User              @relation("InterventionSubject", fields: [userId], references: [id])
+  step         InterventionStep
+  causeCode    InterventionCause?
+  notes        String?
+  recordedById String
+  recordedBy   User              @relation("InterventionRecorder", fields: [recordedById], references: [id])
+  createdAt    DateTime          @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model MeetingLog {
+  id           String   @id @default(uuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title        String
+  scheduledAt  DateTime
+  agenda       String
+  agendaSentAt DateTime?
+  minutes      String?
+  status       String   @default("PLANNED")
+  createdById  String
+  createdBy    User     @relation("MeetingCreator", fields: [createdById], references: [id])
+  createdAt    DateTime @default(now())
+
+  attendance     Attendance[]
+  actionItems    ActionItem[]
+  decisions      MeetingDecision[]
+  changeRequests ChangeRequest[]
+}
+
+model MeetingDecision {
+  id        String     @id @default(uuid())
+  meetingId String
+  meeting   MeetingLog @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  number    Int
+  text      String
+  createdAt DateTime   @default(now())
+
+  @@unique([meetingId, number])
+}
+
+model ActionItem {
+  id          String    @id @default(uuid())
+  meetingId   String
+  meeting     MeetingLog @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description String
+  ownerId     String
+  owner       User      @relation("ActionItemOwner", fields: [ownerId], references: [id])
+  dueDate     DateTime
+  completedAt DateTime?
+  taskId      String?   @unique
+  task        Task?     @relation(fields: [taskId], references: [id])
+}
+
+model Attendance {
+  id        String     @id @default(uuid())
+  meetingId String
+  meeting   MeetingLog @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+  status    String     @default("PRESENT")
+
+  @@unique([meetingId, userId])
+}
+
+model Conflict {
+  id          String         @id @default(uuid())
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        ConflictType
+  level       Int            @default(1)
+  title       String
+  description String
+  status      ConflictStatus @default(OPEN)
+  openedById  String
+  openedBy    User           @relation("ConflictOpener", fields: [openedById], references: [id])
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+  escalatedAt DateTime?
+  summary     String?
+
+  steps ConflictStep[]
+}
+
+model ConflictStep {
+  id           String   @id @default(uuid())
+  conflictId   String
+  conflict     Conflict @relation(fields: [conflictId], references: [id], onDelete: Cascade)
+  level        Int
+  summary      String
+  decidedById  String?
+  decidedBy    User?    @relation("ConflictStepDecider", fields: [decidedById], references: [id])
+  createdAt    DateTime @default(now())
 }
